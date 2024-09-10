@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// Open the BMP file
-	file, err := os.Open("sample.bmp")
+	file, err := os.Open("grid.bmp")
 	errNil(err)
 	defer file.Close()
 
