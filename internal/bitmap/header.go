@@ -1,48 +1,72 @@
 package bitmap
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 )
 
-func Header(data []byte) {
+type BMPHeader struct {
+	FileType [2]byte
+	FileSize uint32
+	Reserved1 uint16
+	Reserved2 uint16
+	StartingAddress uint32
+}
+
+type DIBHeader struct{
+	HeaderSize uint32
+	Width uint32
+	Height uint32
+	ColorPlanes uint16
+	BitsPerPixel uint16 
+	CompressionMethod uint32
+	ImageSize uint32
+	XPixelsPerMeter   int32
+	YPixelsPerMeter   int32
+	TotalColors       uint32
+	ImportantColors   uint32
+}
+
+type Header struct{
+	BMPHeader BMPHeader
+	DIBHeader DIBHeader
+}
+
+func (head *Header) ReadHeader(data []byte) {
+	buf := bytes.NewReader(data)
+	err := binary.Read(buf, binary.LittleEndian, head)
+	errNil(err)
 	// Check if it's a BMP file by looking at the signature ("BM")
 	fmt.Println("BMP Header:")
-	if string(data[:2]) != "BM" {
+	if string(head.BMPHeader.FileType[:]) != "BM" {
 		fmt.Println("Not a BMP file")
 		return
 	}
 
 	// Extract file type
-	fmt.Println("- FileType", string(data[:2]))
+	fmt.Println("- FileType", string(head.BMPHeader.FileType[:]))
 
 	// Extract total file size (optional, just as an example)
-	fileSize := binary.LittleEndian.Uint32(data[2:6])
-	fmt.Println("- FileSizeInBytes", fileSize)
+	fmt.Println("- FileSizeInBytes", head.BMPHeader.FileSize)
 
 	// Extract the size of the header
-	headerSize := binary.LittleEndian.Uint32(data[10:14])
-	fmt.Println("- HeaderSize", headerSize)
+	fmt.Println("- HeaderSize", head.BMPHeader.StartingAddress)
 
 	fmt.Println("DIB Header:")
 
 	// Extract size of the DIB header
-	dibHeaderSize := binary.LittleEndian.Uint32(data[14:18])
-	fmt.Println("- DibHeaderSize", dibHeaderSize)
+	fmt.Println("- DIBHeaderSize", head.DIBHeader.HeaderSize)
 
 	// Extract image width
-	w := binary.LittleEndian.Uint32(data[18:22])
-	fmt.Println("- WidthInPixels", w)
+	fmt.Println("- WidthInPixels", head.DIBHeader.Width)
 
 	// Extract image height
-	h := binary.LittleEndian.Uint32(data[22:26])
-	fmt.Println("- HeightInPixels", h)
+	fmt.Println("- HeightInPixels", head.DIBHeader.Height)
 
 	// Extract pixel size in bits
-	pixelSize := binary.LittleEndian.Uint32(data[28:32])
-	fmt.Println("- PixelSizeInBits", pixelSize)
+	fmt.Println("- PixelSizeInBits", head.DIBHeader.BitsPerPixel)
 
 	// Extract image size in bytes
-	imageSize := fileSize - headerSize
-	fmt.Println("- ImageSizeInBytes", imageSize)
+	fmt.Println("- ImageSizeInBytes", head.BMPHeader.FileSize-head.BMPHeader.StartingAddress)
 }

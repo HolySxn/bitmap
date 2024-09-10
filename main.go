@@ -17,7 +17,10 @@ func main() {
 	data, err := io.ReadAll(file)
 	errNil(err)
 
-	bitmap.Header(data)
+	var header bitmap.Header
+
+	header.ReadHeader(data)
+	
 }
 
 func errNil(err error) {
