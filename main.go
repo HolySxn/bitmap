@@ -23,7 +23,8 @@ func main() {
 	header.HeaderInfo()
 
 	// Make new image
-	newImg := bitmap.MirrorVertical(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
+	// newImg := bitmap.MirrorVertical(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
+	newImg := bitmap.Rotate90(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
 	// fmt.Println(data[header.StartingAddress:])
 	// fmt.Println(newImg)
 	// Crete new BMP file
