@@ -1,7 +1,13 @@
 package bitmap
 
+import (
+	"fmt"
+	"os"
+)
+
 func errNil(err error) {
 	if err != nil {
-		panic(err)
+		fmt.Println("Error:", err)
+		os.Exit(1)
 	}
 }
