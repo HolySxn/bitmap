@@ -25,6 +25,27 @@ type Header struct {
 	ImportantColors   uint32
 }
 
+type Pixel struct {
+	red   byte
+	green byte
+	blue  byte
+}
+
+func Build(data []byte, width int) [][]Pixel {
+	pixel := [][]Pixel{}
+	row := []Pixel{}
+	y := 0
+	for i := 0; i < len(data); i += 3 {
+		if y > width {
+			pixel = append(pixel, row)
+			row = []Pixel{}
+			y = 0
+		}
+		row = append(row, Pixel{data[i], data[i+1], data[i+2]})
+	}
+	return pixel
+}
+
 func (head *Header) ReadHeader(data []byte) {
 	buf := bytes.NewReader(data)
 	err := binary.Read(buf, binary.LittleEndian, head)
