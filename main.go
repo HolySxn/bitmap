@@ -1,11 +1,10 @@
 package main
 
 import (
+	"bitmap/internal/bitmap"
 	"fmt"
 	"io"
 	"os"
-
-	"bitmap/internal/bitmap"
 )
 
 func main() {
@@ -13,7 +12,7 @@ func main() {
 	readData = append(readData, os.Args...)
 	if readData[1] == "apply" {
 		// Open the BMP file
-		file, err := os.Open("sample.bmp")
+		file, err := os.Open("grid.bmp")
 		errNil(err)
 		defer file.Close()
 
@@ -28,7 +27,11 @@ func main() {
 		header.HeaderInfo()
 
 		pixelMap := bitmap.PixelMap(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
-		bitmap.MirrorVertical(pixelMap, int(header.Width), int(header.Height), int(header.BitsPerPixel))
+		// bitmap.MirrorVertical(pixelMap, int(header.Width), int(header.Height), int(header.BitsPerPixel))
+		newMap := bitmap.Rotate90(pixelMap, int(header.Width), int(header.Height))
+		fmt.Println(data[header.StartingAddress:])
+		fmt.Println(pixelMap)
+		fmt.Println(newMap)
 
 		// Make new image
 
@@ -37,7 +40,7 @@ func main() {
 		// fmt.Println(data[header.StartingAddress:])
 		// fmt.Println(newImg)
 		// Crete new BMP file
-		bitmap.CreateBMP(&header, data[header.StartingAddress:], "output.bmp")
+		// bitmap.CreateBMP(&header, data[header.StartingAddress:], "output.bmp")
 		// bitmap.CreateBMP(&header, horiz, "outputFilter.bmp")
 	} else {
 		fmt.Fprintln(os.Stderr, "Error apply")
