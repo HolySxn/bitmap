@@ -33,3 +33,18 @@ func PixelMap(image []byte, width, height int, bpp int) [][]Pixel {
 
 	return pixelMap
 }
+
+// func ToBytes(pixelMap [][]Pixel, bbp int) []byte{
+// 	data := []byte{}
+// 	row
+
+// 	for _, row := range pixelMap{
+// 		for _, pixel := range row{
+// 			data = append(data, pixel.Blue)
+// 			data = append(data, pixel.Green)
+// 			data = append(data, pixel.Red)
+// 		}
+// 		if len(data) %
+// 	}
+
+// }
