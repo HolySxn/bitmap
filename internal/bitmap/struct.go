@@ -27,5 +27,5 @@ type Pixel struct {
 
 type BMPFile struct {
 	head  Header
-	image [][]Pixel
+	image [][]Pixel // array of rows of pixels
 }
