@@ -1,11 +1,5 @@
 package bitmap
 
-type Pixel struct {
-	Blue  byte
-	Green byte
-	Red   byte
-}
-
 func PixelMap(image []byte, width, height int, bpp int) [][]byte {
 	bit := bpp / 8
 	rowSize := width * bit

@@ -5,7 +5,10 @@ import (
 	"os"
 )
 
-func Filt(data []byte, width int, BitsPerPixel int, readData []string, height int) []byte {
+func Filt(data []byte, width int, BitsPerPixel int, readData []string, height int, pixel [][]Pixel) [][]Pixel {
+	if len(readData) <= 2 {
+		os.Exit(1)
+	}
 	piece := readData[2]
 	for i := 0; i < len(readData[2]); i++ {
 		if piece[i] == '=' {
@@ -15,164 +18,71 @@ func Filt(data []byte, width int, BitsPerPixel int, readData []string, height in
 	}
 
 	if piece == "blue" {
-		bit := BitsPerPixel / 8
-		rowSize := width * bit
-		padding := (4 - (rowSize % 4)) % 4
-		newData := make([]byte, len(data))
-		copy(newData, data)
-
-		i := 0
-		for {
-			if i > len(newData) || i+3 > len(newData) {
-				break
-			}
-			pix := newData[i : i+3]
-			pix[1] = 0
-			pix[2] = 0
-			if i+rowSize == 0 {
-				i += padding
-			} else {
-				i += 3
+		for row := 0; row < height; row++ {
+			for col := 0; col < width; col++ {
+				pixel[row][col].red = 0
+				pixel[row][col].green = 0
 			}
 		}
-		return newData
+		return pixel
 	} else if piece == "red" {
-		bit := BitsPerPixel / 8
-		rowSize := width * bit
-		padding := (4 - (rowSize % 4)) % 4
-		newData := make([]byte, len(data))
-		copy(newData, data)
-
-		i := 0
-		for {
-			if i > len(newData) || i+3 > len(newData) {
-				break
-			}
-			pix := newData[i : i+3]
-			pix[0] = 0
-			pix[1] = 0
-			if i+rowSize == 0 {
-				i += padding
-			} else {
-				i += 3
+		for row := 0; row < height; row++ {
+			for col := 0; col < width; col++ {
+				pixel[row][col].green = 0
+				pixel[row][col].blue = 0
 			}
 		}
-		return newData
+		return pixel
 	} else if piece == "green" {
-		bit := BitsPerPixel / 8
-		rowSize := width * bit
-		padding := (4 - (rowSize % 4)) % 4
-		newData := make([]byte, len(data))
-		copy(newData, data)
-
-		i := 0
-		for {
-			if i > len(newData) || i+3 > len(newData) {
-				break
-			}
-			pix := newData[i : i+3]
-			pix[0] = 0
-			pix[2] = 0
-			if i+rowSize == 0 {
-				i += padding
-			} else {
-				i += 3
+		for row := 0; row < height; row++ {
+			for col := 0; col < width; col++ {
+				pixel[row][col].red = 0
+				pixel[row][col].blue = 0
 			}
 		}
-		return newData
+		return pixel
 	} else if piece == "negative" {
-		bit := BitsPerPixel / 8
-		rowSize := width * bit
-		padding := (4 - (rowSize % 4)) % 4
-		newData := make([]byte, len(data))
-		copy(newData, data)
-
-		i := 0
-		for {
-			if i > len(newData) || i+3 > len(newData) {
-				break
-			}
-			pix := newData[i : i+3]
-			pix[0] = 255 - pix[0]
-			pix[1] = 255 - pix[1]
-			pix[2] = 255 - pix[2]
-			if i+rowSize == 0 {
-				i += padding
-			} else {
-				i += 3
+		for row := 0; row < height; row++ {
+			for col := 0; col < width; col++ {
+				pixel[row][col].red = 255 - pixel[row][col].red
+				pixel[row][col].green = 255 - pixel[row][col].green
+				pixel[row][col].blue = 255 - pixel[row][col].blue
 			}
 		}
-		return newData
+		return pixel
 	} else if piece == "pixelate" {
-		bit := BitsPerPixel / 8
-		rowSize := width * bit
 		blockSize := 20
-		newData := make([]byte, len(data))
-		copy(newData, data)
-
-		// Process the image by pixelating in blocks
-		for y := 0; y < len(data)/rowSize; y += blockSize {
-			for x := 0; x < width; x += blockSize {
-				// Average the pixel colors within the block
-				var rSum, gSum, bSum, count int
-
-				// Traverse each pixel in the block
-				for by := 0; by < blockSize; by++ {
-					for bx := 0; bx < blockSize; bx++ {
-						// Calculate the pixel position in the image
-						yi := y + by
-						xi := x + bx
-
-						// Make sure we don't exceed the image boundaries
-						if yi >= len(data)/rowSize || xi >= width {
+		for row := 0; row < height; row += blockSize {
+			for col := 0; col < width; col += blockSize {
+				var red, green, blue, count int
+				for y := 0; y < blockSize; y++ {
+					for x := 0; x < blockSize; x++ {
+						yPixel := row + y
+						xPixel := col + x
+						if yPixel > height || xPixel > width {
 							continue
 						}
-
-						// Calculate the position in the byte array
-						i := yi*rowSize + xi*bit
-
-						// Extract pixel values (BMP is stored in BGR format)
-						b := int(newData[i])
-						g := int(newData[i+1])
-						r := int(newData[i+2])
-
-						// Sum the pixel values
-						rSum += r
-						gSum += g
-						bSum += b
+						red += int(pixel[yPixel][xPixel].red)
+						blue += int(pixel[yPixel][xPixel].green)
+						green += int(pixel[yPixel][xPixel].blue)
 						count++
 					}
 				}
-
-				// Calculate the average color
-				rAvg := byte(rSum / count)
-				gAvg := byte(gSum / count)
-				bAvg := byte(bSum / count)
-
-				// Apply the average color to all pixels in the block
-				for by := 0; by < blockSize; by++ {
-					for bx := 0; bx < blockSize; bx++ {
-						// Calculate the pixel position in the image
-						yi := y + by
-						xi := x + bx
-
-						// Make sure we don't exceed the image boundaries
-						if yi >= len(data)/rowSize || xi >= width {
+				for y := 0; y < blockSize; y++ {
+					for x := 0; x < blockSize; x++ {
+						yPixel := row + y
+						xPixel := col + x
+						if yPixel > height || xPixel > width {
 							continue
 						}
-
-						// Calculate the position in the byte array
-						i := yi*rowSize + xi*bit
-
-						// Set the pixel values to the average color
-						newData[i] = bAvg   // Set blue
-						newData[i+1] = gAvg // Set green
-						newData[i+2] = rAvg // Set red
+						pixel[yPixel][xPixel].red = byte(red / count)
+						pixel[yPixel][xPixel].green = byte(green / count)
+						pixel[yPixel][xPixel].blue = byte(blue / count)
 					}
 				}
 			}
 		}
-		return newData
+		return pixel
 	} else if piece == "blur" {
 		bit := BitsPerPixel / 8
 		rowSize := width * bit
@@ -213,20 +123,30 @@ func Filt(data []byte, width int, BitsPerPixel int, readData []string, height in
 				newData[i+2] = rAvg
 			}
 		}
-		return newData
+		for row := 0; row < height; row++ {
+			for col := 0; col < width; col++ {
+				var red, green, blue, count int
+
+				for y := 0; y <= halfKernel; y++ {
+					for x := 0; x <= halfKernel; x++ {
+					}
+				}
+			}
+		}
+		return pixel
 	} else {
 		fmt.Fprintln(os.Stderr, "Undefined filter")
 		os.Exit(1)
 	}
-	return []byte{}
+	return [][]Pixel{}
 }
 
 func clamp(value, min, max int) int {
-    if value < min {
-        return min
-    }
-    if value > max {
-        return max
-    }
-    return value
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
 }
