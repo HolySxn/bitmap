@@ -18,6 +18,6 @@ func (bmp *BMPFile) RotateRight() {
 
 	// Data overwrite
 	bmp.image = newData
-	// Рeight and width overwriting
+	// Height and width overwriting
 	bmp.head.Width, bmp.head.Height = bmp.head.Height, bmp.head.Width
 }
