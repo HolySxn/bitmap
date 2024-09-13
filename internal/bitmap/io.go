@@ -6,6 +6,7 @@ import (
 	"log"
 )
 
+// Get data and create BMPFile struct from a byte slice
 func Decode(data []byte) BMPFile {
 	// Create BMPFile
 	var bmp BMPFile
@@ -15,6 +16,7 @@ func Decode(data []byte) BMPFile {
 	return bmp
 }
 
+// Create new a new byte slice from a BMPFile struct
 func Encode(bmp BMPFile) []byte {
 	head := bmp.convertHeaderToBytes()
 	body := bmp.converBodyToBytes()
@@ -24,6 +26,7 @@ func Encode(bmp BMPFile) []byte {
 	return file
 }
 
+// Read information from header
 func readHeader(data []byte) Header {
 	var head Header
 
@@ -35,6 +38,7 @@ func readHeader(data []byte) Header {
 	return head
 }
 
+// Read pixels from data and create [][]Pixel array
 func readImage(image []byte, width, height int, bpp int) [][]Pixel {
 	bit := bpp / 8
 	rowSize := width * bit
@@ -52,9 +56,9 @@ func readImage(image []byte, width, height int, bpp int) [][]Pixel {
 			pixel := make([]byte, bit)
 			copy(pixel, image[i:i+bit])
 			newRow = append(newRow, Pixel{
-				b:  pixel[0],
+				b: pixel[0],
 				g: pixel[1],
-				r:   pixel[2]})
+				r: pixel[2]})
 
 			i += bit
 		}
@@ -81,6 +85,7 @@ func (bmp *BMPFile) convertHeaderToBytes() []byte {
 	return buf.Bytes()
 }
 
+// Convert [][]Pixel array to a byte slice
 func (bmp *BMPFile) converBodyToBytes() []byte {
 	data := bmp.image
 	bpp := int(bmp.head.BitsPerPixel) / 8
