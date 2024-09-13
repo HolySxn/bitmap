@@ -14,28 +14,6 @@ func MirrorHorizontal(data [][]byte, width int, height int, bpp int) {
 	}
 }
 
-// func MirrorVertical(data []byte, width int, height int, bpp int) []byte {
-// 	bit := bpp / 8
-// 	rowSize := width * bit
-// 	padding := (4 - (rowSize % 4)) % 4
-// 	rowSize += padding
-
-// 	newData := make([]byte, len(data))
-// 	copy(newData, data)
-
-// 	for y := 0; y < height; y++ {
-// 		top := y * rowSize
-// 		bottom := height*rowSize - rowSize - top
-// 		if bottom < top {
-// 			break
-// 		}
-// 		for x := 0; x < rowSize; x++ {
-// 			newData[top+x], newData[bottom+x] = newData[bottom+x], newData[top+x]
-// 		}
-// 	}
-
-// 	return newData
-// }
 
 func MirrorVertical(data [][]byte, width int, height int, bpp int) {
 	bpp = bpp / 8
