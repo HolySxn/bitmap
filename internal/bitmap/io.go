@@ -3,7 +3,6 @@ package bitmap
 import (
 	"bytes"
 	"encoding/binary"
-	"log"
 )
 
 // Get data and create BMPFile struct from a byte slice
@@ -77,9 +76,7 @@ func (bmp *BMPFile) convertHeaderToBytes() []byte {
 
 	// Write the Header struct into the buffer using little-endian encoding
 	err := binary.Write(buf, binary.LittleEndian, bmp.head)
-	if err != nil {
-		log.Fatalf("Failed to convert header to bytes: %v", err)
-	}
+	errNil(err)
 
 	// Return the byte slice
 	return buf.Bytes()
