@@ -1,33 +1,25 @@
 package bitmap
 
-func MirrorHorizontal(data [][]byte, width int, height int, bpp int) {
-	bpp = bpp / 8
+func (bmp *BMPFile) MirrorHorizontal() {
+	data := bmp.image
+	width := int(bmp.head.Width)
+	height := int(bmp.head.Height)
 
 	for y := 0; y < height; y++ {
-		start := y * width
-		end := start + width - 1
-		for i, j := start, end; i < j; i, j = i+1, j-1 {
-			for k := 0; k < bpp; k++ {
-				data[i][k], data[j][k] = data[j][k], data[i][k]
-			}
+		for x := 0; x < width/2; x++ {
+			data[y][x], data[y][width-x-1] = data[y][width-x-1], data[y][x]
 		}
 	}
 }
 
+func (bmp *BMPFile) MirrorVertical() {
+	data := bmp.image
+	width := int(bmp.head.Width)
+	height := int(bmp.head.Height)
 
-func MirrorVertical(data [][]byte, width int, height int, bpp int) {
-	bpp = bpp / 8
-
-	for y := 0; y < height; y++ {
-		top := y * width
-		bottom := height*width - width - top
-		if bottom < top {
-			break
-		}
+	for y := 0; y < height/2; y++ {
 		for x := 0; x < width; x++ {
-			for k := 0; k < bpp; k++ {
-				data[top+x][k], data[bottom+x][k] = data[bottom+x][k], data[top+x][k]
-			}
+			data[y][x], data[height-y-1][x] = data[height-y-1][x], data[y][x]
 		}
 	}
 }
