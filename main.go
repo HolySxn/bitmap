@@ -11,45 +11,50 @@ func main() {
 	var readData []string
 	readData = append(readData, os.Args...)
 	if readData[1] == "apply" {
-		// Open the BMP file
-		file, err := os.Open("grid.bmp")
-		errNil(err)
-		defer file.Close()
+		data := readFile("sample.bmp")
+		// Get BMPFile struct
+		bmp := bitmap.Decode(data)
+		bmp.HeaderInfo()
 
-		// Read the entire file into memory
-		data, err := io.ReadAll(file)
-		errNil(err)
+		// Some manipulations
+		bmp.MirrorVertical()
+		bmp.RotateRight()
 
-		// Read and output header
-		var header bitmap.Header
+		// Get array of bytes
+		data = bitmap.Encode(bmp)
 
-		header.ReadHeader(data)
-		header.HeaderInfo()
-
-		pixelMap := bitmap.PixelMap(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
-		// bitmap.MirrorVertical(pixelMap, int(header.Width), int(header.Height), int(header.BitsPerPixel))
-		newMap := bitmap.Rotate90(pixelMap, int(header.Width), int(header.Height))
-		fmt.Println(data[header.StartingAddress:])
-		fmt.Println(pixelMap)
-		fmt.Println(newMap)
-
-		// Make new image
-
-		// newFilter := bitmap.Filt(data[header.StartingAddress:], int(header.Width), int(header.BitsPerPixel), readData)
-		// newImg := bitmap.MirrorVertical(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
-		// fmt.Println(data[header.StartingAddress:])
-		// fmt.Println(newImg)
-		// Crete new BMP file
-		// bitmap.CreateBMP(&header, data[header.StartingAddress:], "output.bmp")
-		// bitmap.CreateBMP(&header, horiz, "outputFilter.bmp")
+		createFile(data)
 	} else {
 		fmt.Fprintln(os.Stderr, "Error apply")
 		os.Exit(1)
 	}
 }
 
+func readFile(name string) []byte {
+	// Open the BMP file
+	file, err := os.Open(name)
+	errNil(err)
+	defer file.Close()
+
+	// Read the entire file into memory
+	data, err := io.ReadAll(file)
+	errNil(err)
+
+	return data
+}
+
+func createFile(data []byte) {
+	file, err := os.Create("output.bmp")
+	errNil(err)
+	defer file.Close()
+
+	_, err = file.Write(data)
+	errNil(err)
+}
+
 func errNil(err error) {
 	if err != nil {
-		panic(err)
+		fmt.Println("Error:", err)
+		os.Exit(1)
 	}
 }
