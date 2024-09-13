@@ -23,19 +23,13 @@ func main() {
 
 		// Read and output header
 		var header bitmap.Header
-
 		header.ReadHeader(data)
 		header.HeaderInfo()
 
+		// When we change data in pixelMap it also changed in the originall array "data"
 		pixelMap := bitmap.PixelMap(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
 		bitmap.MirrorVertical(pixelMap, int(header.Width), int(header.Height), int(header.BitsPerPixel))
 
-		// Make new image
-
-		// newFilter := bitmap.Filt(data[header.StartingAddress:], int(header.Width), int(header.BitsPerPixel), readData)
-		// newImg := bitmap.MirrorVertical(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
-		// fmt.Println(data[header.StartingAddress:])
-		// fmt.Println(newImg)
 		// Crete new BMP file
 		bitmap.CreateBMP(&header, data[header.StartingAddress:], "output.bmp")
 		// bitmap.CreateBMP(&header, horiz, "outputFilter.bmp")
