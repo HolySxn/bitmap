@@ -1,5 +1,0 @@
-0000ff ffffff 0000 | Red  White
-ff0000 00ff00 0000 | Blue Green
-
-ffffff 00ff00 0000 | White Green
-0000ff ff0000 0000 | Red   Blue

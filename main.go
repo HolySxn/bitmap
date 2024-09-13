@@ -27,15 +27,18 @@ func main() {
 		header.ReadHeader(data)
 		header.HeaderInfo()
 
+		pixelMap := bitmap.PixelMap(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
+		bitmap.MirrorVertical(pixelMap, int(header.Width), int(header.Height), int(header.BitsPerPixel))
+
 		// Make new image
-		// horiz := bitmap.MirrorHorizontal(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
-		newFilter := bitmap.Filt(data[header.StartingAddress:], int(header.Width), int(header.BitsPerPixel), readData)
+
+		// newFilter := bitmap.Filt(data[header.StartingAddress:], int(header.Width), int(header.BitsPerPixel), readData)
 		// newImg := bitmap.MirrorVertical(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
 		// fmt.Println(data[header.StartingAddress:])
 		// fmt.Println(newImg)
 		// Crete new BMP file
-		// bitmap.CreateBMP(&header, newImg, "output.bmp")
-		bitmap.CreateBMP(&header, newFilter, "outputFilter.bmp")
+		bitmap.CreateBMP(&header, data[header.StartingAddress:], "output.bmp")
+		// bitmap.CreateBMP(&header, horiz, "outputFilter.bmp")
 	} else {
 		fmt.Fprintln(os.Stderr, "Error apply")
 		os.Exit(1)
