@@ -222,7 +222,6 @@ func Filt(data []byte, width int, BitsPerPixel int, readData []string, height in
 }
 
 func clamp(value, min, max int) int {
-<<<<<<< HEAD
 	if value < min {
 		return min
 	}
@@ -230,13 +229,4 @@ func clamp(value, min, max int) int {
 		return max
 	}
 	return value
-=======
-    if value < min {
-        return min
-    }
-    if value > max {
-        return max
-    }
-    return value
->>>>>>> master
 }
