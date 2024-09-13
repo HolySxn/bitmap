@@ -11,7 +11,9 @@ func main() {
 	var readData []string
 	readData = append(readData, os.Args...)
 	if readData[1] == "apply" {
+		// Read file
 		data := readFile("sample.bmp")
+
 		// Get BMPFile struct
 		bmp := bitmap.Decode(data)
 		bmp.HeaderInfo()
@@ -23,6 +25,7 @@ func main() {
 		// Get array of bytes
 		data = bitmap.Encode(bmp)
 
+		// Create new bmp file
 		createFile(data)
 	} else {
 		fmt.Fprintln(os.Stderr, "Error apply")
