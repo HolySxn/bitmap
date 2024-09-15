@@ -5,7 +5,6 @@ import (
 	"os"
 )
 
-
 func (bmp *BMPFile) Filt(piece string) {
 	data1 := bmp.image
 
@@ -51,98 +50,45 @@ func (bmp *BMPFile) Filt(piece string) {
 			}
 		}
 	} else if piece == "pixelate" {
-		bit := bmp.head.BitsPerPixel / 8
-		rowSize := uint16(bmp.head.Width) * bit
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
 		blockSize := 20
-		newData := make([]byte, len(data1))
-
-		// Process the image by pixelating in blocks
-		for y := 0; y < len(data1)/int(rowSize); y += blockSize {
-			for x := 0; x < int(bmp.head.Width); x += blockSize {
-				// Average the pixel colors within the block
-				var rSum, gSum, bSum, count int
-
-				// Traverse each pixel in the block
+		
+		for y := 0; y < height; y += blockSize {
+			for x := 0; x < width; x += blockSize {
+				var RSum, GSum, BSum int
+				count := 0
+	
 				for by := 0; by < blockSize; by++ {
 					for bx := 0; bx < blockSize; bx++ {
-						// Calculate the pixel position in the image
-						yi := y + by
-						xi := x + bx
-
-						// Make sure we don't exceed the image boundaries
-						if yi >= len(data1)/int(rowSize) || xi >= int(bmp.head.Width) {
-							continue
-						}
-
-						// Calculate the position in the byte array
-						i := yi*int(rowSize) + xi*int(bit)
-
-						// Extract pixel values (BMP is stored in BGR format)
-						b := int(newData[i])
-						g := int(newData[i+1])
-						r := int(newData[i+2])
-
-						// Sum the pixel values
-						rSum += r
-						gSum += g
-						bSum += b
+						pixel := data1[y+by][x+bx]
+						RSum += int(pixel.r)
+						GSum += int(pixel.g)
+						BSum += int(pixel.b)
 						count++
 					}
 				}
-
-				// Calculate the average color
-				rAvg := byte(rSum / count)
-				gAvg := byte(gSum / count)
-				bAvg := byte(bSum / count)
-
-				// Apply the average color to all pixels in the block
-				for by := 0; by < blockSize; by++ {
-					for bx := 0; bx < blockSize; bx++ {
-						// Calculate the pixel position in the image
-						yi := y + by
-						xi := x + bx
-
-						// Make sure we don't exceed the image boundaries
-						if yi >= len(data1)/int(rowSize) || xi >= int(bmp.head.Width) {
-							continue
-						}
-
-						// Calculate the position in the byte array
-						i := yi*int(rowSize) + xi*int(bit)
-
-						// Set the pixel values to the average color
-						newData[i] = bAvg   // Set blue
-						newData[i+1] = gAvg // Set green
-						newData[i+2] = rAvg // Set red
+	
+				RAvg := byte(RSum / count)
+				GAvg := byte(GSum / count)
+				BAvg := byte(BSum / count)
+	
+				for by := 0; by < blockSize && y+by < height; by++ {
+					for bx := 0; bx < blockSize && x+bx < width; bx++ {
+						data1[y+by][x+bx].r = RAvg
+						data1[y+by][x+bx].g = GAvg
+						data1[y+by][x+bx].b = BAvg
 					}
 				}
 			}
 		}
 	} else if piece == "blur" {
-		var R int
-		var G int
-		var B int
-		count := 0
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
-
-		for i := 0; i < height; i++ {
-			for j := 0; j < width; j++ {
-				G += data1[i][j].g
-				R += data1[i][j].r
-				B += data1[i][j].b
-				count++
-				if j == 20 {
-					j = 0
-					i++
-					if i == 20 {
-						
-					}
-				}
-			}
-		}
+		
 	} else {
 		fmt.Fprintln(os.Stderr, "Undefined filter")
 		os.Exit(1)
 	}
+
 }
