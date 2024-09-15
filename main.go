@@ -1,16 +1,34 @@
 package main
 
 import (
-	"bitmap/internal/bitmap"
 	"fmt"
 	"io"
 	"os"
+
+	"bitmap/internal/bitmap"
 )
 
 func main() {
 	var readData []string
+	var color string
 	readData = append(readData, os.Args...)
 	if readData[1] == "apply" {
+		piece := readData[2]
+		for i := 0; i < len(readData[2]); i++ {
+			if piece[i] == '=' {
+				color = piece[i+1:]
+				piece = piece[:i]
+				break
+			}
+		}
+		if piece == "--filter" {
+			dataPic := readFile("sample.bmp")
+			bmp := bitmap.Decode(dataPic)
+			bmp.Filt(color, dataPic)
+			dataPic = bitmap.Encode(bmp)
+			createFile(dataPic)
+			os.Exit(0)
+		}
 		// Read file
 		data := readFile("sample.bmp")
 
