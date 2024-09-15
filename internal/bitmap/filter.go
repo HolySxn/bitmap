@@ -119,42 +119,26 @@ func (bmp *BMPFile) Filt(piece string) {
 			}
 		}
 	} else if piece == "blur" {
-		bit := bmp.head.BitsPerPixel / 8
-		rowSize := uint16(bmp.head.Width) * bit
-		halfKernel := 20
+		var R int
+		var G int
+		var B int
+		count := 0
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
 
-		newData := make([]byte, len(data1))
-
-		for y := 0; y < int(bmp.head.Height); y++ {
-			for x := 0; x < int(bmp.head.Width); x++ {
-				var rSum, gSum, bSum, count int
-
-				for ky := 0; ky <= halfKernel; ky++ {
-					for kx := 0; kx <= halfKernel; kx++ {
-						// ny := clamp(y+ky, 0, int(bmp.head.Height)-1)
-						// nx := clamp(x+kx, 0, int(bmp.head.Width)-1)
-
-						// i := (ny*int(rowSize) + nx*3)
-
-						// b := int(data1[i])
-						// g := int(data1[i+1])
-						// r := int(data1[i+2])
-
-						// rSum += r
-						// gSum += g
-						// bSum += b
-						count++
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				G += data1[i][j].g
+				R += data1[i][j].r
+				B += data1[i][j].b
+				count++
+				if j == 20 {
+					j = 0
+					i++
+					if i == 20 {
+						
 					}
 				}
-
-				rAvg := byte(rSum / count)
-				gAvg := byte(gSum / count)
-				bAvg := byte(bSum / count)
-
-				i := (y*int(rowSize) + x*3)
-				newData[i] = bAvg
-				newData[i+1] = gAvg
-				newData[i+2] = rAvg
 			}
 		}
 	} else {

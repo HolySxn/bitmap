@@ -37,8 +37,7 @@ func main() {
 		bmp.HeaderInfo()
 
 		// Some manipulations
-		bmp.MirrorVertical()
-		bmp.RotateRight()
+		bmp.Crop()
 
 		// Get array of bytes
 		data = bitmap.Encode(bmp)
