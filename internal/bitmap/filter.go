@@ -5,106 +5,59 @@ import (
 	"os"
 )
 
-func (bmp *BMPFile) Filt(piece string, data []byte) []byte {
-	
+
+func (bmp *BMPFile) Filt(piece string) {
+	data1 := bmp.image
+
 	if piece == "blue" {
-		bit := int(bmp.head.BitsPerPixel) / 8
-		rowSize := int(bmp.head.Width) * int(bit)
-		padding := (4 - (rowSize % 4)) % 4
-		newData := make([]byte, len(data))
-		copy(newData, data)
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
 
-		i := 0
-		for {
-			if i > len(newData) || i+3 > len(newData) {
-				break
-			}
-			pix := newData[i : i+3]
-			pix[1] = 0
-			pix[2] = 0
-			if i+rowSize == 0 {
-				i += padding
-			} else {
-				i += 3
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				data1[i][j].g = 0
+				data1[i][j].r = 0
 			}
 		}
-		return newData
 	} else if piece == "red" {
-		bit := bmp.head.BitsPerPixel / 8
-		rowSize := uint16(bmp.head.Width) * bit
-		padding := (4 - (rowSize % 4)) % 4
-		newData := make([]byte, len(data))
-		copy(newData, data)
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
 
-		i := 0
-		for {
-			if i > len(newData) || i+3 > len(newData) {
-				break
-			}
-			pix := newData[i : i+3]
-			pix[0] = 0
-			pix[1] = 0
-			if uint16(i)+rowSize == 0 {
-				i += int(padding)
-			} else {
-				i += 3
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				data1[i][j].g = 0
+				data1[i][j].b = 0
 			}
 		}
-		return newData
 	} else if piece == "green" {
-		bit := bmp.head.BitsPerPixel / 8
-		rowSize := uint16(bmp.head.Width) * bit
-		padding := (4 - (rowSize % 4)) % 4
-		newData := make([]byte, len(data))
-		copy(newData, data)
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
 
-		i := 0
-		for {
-			if i > len(newData) || i+3 > len(newData) {
-				break
-			}
-			pix := newData[i : i+3]
-			pix[0] = 0
-			pix[2] = 0
-			if uint16(i)+rowSize == 0 {
-				i += int(padding)
-			} else {
-				i += 3
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				data1[i][j].b = 0
+				data1[i][j].r = 0
 			}
 		}
-		return newData
 	} else if piece == "negative" {
-		bit := bmp.head.BitsPerPixel / 8
-		rowSize := uint16(bmp.head.Width) * bit
-		padding := (4 - (rowSize % 4)) % 4
-		newData := make([]byte, len(data))
-		copy(newData, data)
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
 
-		i := 0
-		for {
-			if i > len(newData) || i+3 > len(newData) {
-				break
-			}
-			pix := newData[i : i+3]
-			pix[0] = 255 - pix[0]
-			pix[1] = 255 - pix[1]
-			pix[2] = 255 - pix[2]
-			if uint16(i)+rowSize == 0 {
-				i += int(padding)
-			} else {
-				i += 3
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				data1[i][j].g = 255 - data1[i][j].g
+				data1[i][j].r = 255 - data1[i][j].r
+				data1[i][j].b = 255 - data1[i][j].b
 			}
 		}
-		return newData
 	} else if piece == "pixelate" {
 		bit := bmp.head.BitsPerPixel / 8
 		rowSize := uint16(bmp.head.Width) * bit
 		blockSize := 20
-		newData := make([]byte, len(data))
-		copy(newData, data)
+		newData := make([]byte, len(data1))
 
 		// Process the image by pixelating in blocks
-		for y := 0; y < len(data)/int(rowSize); y += blockSize {
+		for y := 0; y < len(data1)/int(rowSize); y += blockSize {
 			for x := 0; x < int(bmp.head.Width); x += blockSize {
 				// Average the pixel colors within the block
 				var rSum, gSum, bSum, count int
@@ -117,7 +70,7 @@ func (bmp *BMPFile) Filt(piece string, data []byte) []byte {
 						xi := x + bx
 
 						// Make sure we don't exceed the image boundaries
-						if yi >= len(data)/int(rowSize) || xi >= int(bmp.head.Width) {
+						if yi >= len(data1)/int(rowSize) || xi >= int(bmp.head.Width) {
 							continue
 						}
 
@@ -150,7 +103,7 @@ func (bmp *BMPFile) Filt(piece string, data []byte) []byte {
 						xi := x + bx
 
 						// Make sure we don't exceed the image boundaries
-						if yi >= len(data)/int(rowSize) || xi >= int(bmp.head.Width) {
+						if yi >= len(data1)/int(rowSize) || xi >= int(bmp.head.Width) {
 							continue
 						}
 
@@ -165,14 +118,12 @@ func (bmp *BMPFile) Filt(piece string, data []byte) []byte {
 				}
 			}
 		}
-		return newData
 	} else if piece == "blur" {
 		bit := bmp.head.BitsPerPixel / 8
 		rowSize := uint16(bmp.head.Width) * bit
 		halfKernel := 20
 
-		newData := make([]byte, len(data))
-		copy(newData, data)
+		newData := make([]byte, len(data1))
 
 		for y := 0; y < int(bmp.head.Height); y++ {
 			for x := 0; x < int(bmp.head.Width); x++ {
@@ -180,18 +131,18 @@ func (bmp *BMPFile) Filt(piece string, data []byte) []byte {
 
 				for ky := 0; ky <= halfKernel; ky++ {
 					for kx := 0; kx <= halfKernel; kx++ {
-						ny := clamp(y+ky, 0, int(bmp.head.Height)-1)
-						nx := clamp(x+kx, 0, int(bmp.head.Width)-1)
+						// ny := clamp(y+ky, 0, int(bmp.head.Height)-1)
+						// nx := clamp(x+kx, 0, int(bmp.head.Width)-1)
 
-						i := (ny*int(rowSize) + nx*3)
+						// i := (ny*int(rowSize) + nx*3)
 
-						b := int(data[i])
-						g := int(data[i+1])
-						r := int(data[i+2])
+						// b := int(data1[i])
+						// g := int(data1[i+1])
+						// r := int(data1[i+2])
 
-						rSum += r
-						gSum += g
-						bSum += b
+						// rSum += r
+						// gSum += g
+						// bSum += b
 						count++
 					}
 				}
@@ -206,20 +157,8 @@ func (bmp *BMPFile) Filt(piece string, data []byte) []byte {
 				newData[i+2] = rAvg
 			}
 		}
-		return newData
 	} else {
 		fmt.Fprintln(os.Stderr, "Undefined filter")
 		os.Exit(1)
 	}
-	return []byte{}
-}
-
-func clamp(value, min, max int) int {
-	if value < min {
-		return min
-	}
-	if value > max {
-		return max
-	}
-	return value
 }

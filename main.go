@@ -24,7 +24,7 @@ func main() {
 		if piece == "--filter" {
 			dataPic := readFile("sample.bmp")
 			bmp := bitmap.Decode(dataPic)
-			bmp.Filt(color, dataPic)
+			bmp.Filt(color)
 			dataPic = bitmap.Encode(bmp)
 			createFile(dataPic)
 			os.Exit(0)
