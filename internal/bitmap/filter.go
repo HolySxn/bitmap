@@ -53,12 +53,12 @@ func (bmp *BMPFile) Filt(piece string) {
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
 		blockSize := 20
-		
+
 		for y := 0; y < height; y += blockSize {
 			for x := 0; x < width; x += blockSize {
 				var RSum, GSum, BSum int
 				count := 0
-	
+
 				for by := 0; by < blockSize; by++ {
 					for bx := 0; bx < blockSize; bx++ {
 						pixel := data1[y+by][x+bx]
@@ -68,13 +68,13 @@ func (bmp *BMPFile) Filt(piece string) {
 						count++
 					}
 				}
-	
+
 				RAvg := byte(RSum / count)
 				GAvg := byte(GSum / count)
 				BAvg := byte(BSum / count)
-	
-				for by := 0; by < blockSize && y+by < height; by++ {
-					for bx := 0; bx < blockSize && x+bx < width; bx++ {
+
+				for by := 0; by < blockSize; by++ {
+					for bx := 0; bx < blockSize; bx++ {
 						data1[y+by][x+bx].r = RAvg
 						data1[y+by][x+bx].g = GAvg
 						data1[y+by][x+bx].b = BAvg
@@ -85,10 +85,59 @@ func (bmp *BMPFile) Filt(piece string) {
 	} else if piece == "blur" {
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
-		
+
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				var rSum, gSum, bSum int
+
+				for bi := 0; bi <= 2; bi++ {
+					for bj := 0; bj <= 2; bj++ {
+						if i+bi >= height || j+bj >= width {
+							break
+						}
+						
+						rSum += int(data1[i+bi][j+bj].r)
+						gSum += int(data1[i+bi][j+bj].g)
+						bSum += int(data1[i+bi][j+bj].b)
+					}
+				}
+
+				rCenterSum := rSum / 9
+				gCenterSum := gSum / 9
+				bCenterSum := bSum / 9
+
+				for bi := 0; bi <= 2; bi++ {
+					for bj := 0; bj <= 2; bj++ {
+						if i+bi >= height || j+bj >= width {
+							break
+						}
+						data1[i+bi][j+bj].r = byte(rCenterSum)
+						data1[i+bi][j+bj].g = byte(gCenterSum)
+						data1[i+bi][j+bj].b = byte(bCenterSum)
+					}
+				}
+			}
+		}
+	} else if piece == "grayscale" {
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
+
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+
+				R := float64(data1[i][j].r)
+				G := float64(data1[i][j].g)
+				B := float64(data1[i][j].b)
+
+				grayscale := byte(R*0.299 + G*0.587 + B*0.114)
+
+				data1[i][j].g = grayscale
+				data1[i][j].b = grayscale
+				data1[i][j].r = grayscale
+			}
+		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Undefined filter")
 		os.Exit(1)
 	}
-
 }
