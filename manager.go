@@ -39,7 +39,11 @@ The options are:
 	...`
 
 func manage(args []string) {
-	if len(args) == 0 || args[0] == "--help" || args[0] == "-h" {
+	if len(args) == 0 {
+		fmt.Println("no command provided")
+		fmt.Println(bitmapHelp)
+		os.Exit(1)
+	} else if args[0] == "--help" || args[0] == "-h" {
 		fmt.Println(bitmapHelp)
 	} else if len(args) >= 1 {
 		switch args[0] {
@@ -62,36 +66,57 @@ func manage(args []string) {
 				bmp.HeaderInfo()
 			}
 		case "apply":
-			if len(args[1:]) < 3{
+			if len(args[1:]) < 3 {
 				fmt.Println("error: not enough arguments")
 				fmt.Println(applyHeader)
 				os.Exit(1)
-			}else{
+			} else {
 				dst := args[len(args)-1]
 				src := args[len(args)-2]
 
 				if !strings.HasSuffix(dst, ".bmp") || !strings.HasSuffix(src, ".bmp") {
-					fmt.Println(src)
-					fmt.Println(dst)
-					fmt.Println("wrong file type")
-					fmt.Println(applyHeader)
+					fmt.Println("<source_file> and <output_file> must be .bmp type")
 					os.Exit(1)
 				}
 
-				args = args[1:len(args)-2]
+				args = args[1 : len(args)-2]
 
-				applyManager(args, src, dst)
+				file := readFile(src)
+				bmp, err := bitmap.Decode(file)
+				errNil(err)
+
+				for _, command := range args {
+					applyManager(&bmp, command)
+				}
+
+				newData, err := bitmap.Encode(bmp)
+				errNil(err)
+
+				// Create new bmp file
+				createFile(newData, dst)
+				fmt.Println("New file was successfully created!")
 			}
 		}
 	}
 }
 
-func applyManager(args []string, src, dst string){
-	fmt.Println("Did not do yet")
-	fmt.Println(args)
-	fmt.Println(src)
-	fmt.Println(dst)
-	os.Exit(0)
+func applyManager(bmp *bitmap.BMPFile, command string) {
+	com_val := strings.Split(command, "=")
+	if len(com_val) != 2 {
+		fmt.Println("wrong input. See 'apply --help'")
+		os.Exit(1)
+	}
+
+	com := com_val[0]
+	value := com_val[1]
+
+	switch com {
+	case "--mirror":
+		switch value {
+		case "horizontal", "h", "horizontally", "hor":
+			bmp.MirrorHorizontal()
+		}
+	}
 }
 
 func readFile(name string) []byte {
@@ -107,8 +132,8 @@ func readFile(name string) []byte {
 	return data
 }
 
-func createFile(data []byte) {
-	file, err := os.Create("output.bmp")
+func createFile(data []byte, name string) {
+	file, err := os.Create(name)
 	errNil(err)
 	defer file.Close()
 
