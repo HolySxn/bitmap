@@ -8,7 +8,9 @@ import (
 func (bmp *BMPFile) Filt(piece string) {
 	data1 := bmp.image
 
-	if piece == "blue" {
+	switch piece {
+		
+	case "blue":
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
 
@@ -18,7 +20,8 @@ func (bmp *BMPFile) Filt(piece string) {
 				data1[i][j].r = 0
 			}
 		}
-	} else if piece == "red" {
+
+	case "red":
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
 
@@ -28,7 +31,8 @@ func (bmp *BMPFile) Filt(piece string) {
 				data1[i][j].b = 0
 			}
 		}
-	} else if piece == "green" {
+
+	case "green":
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
 
@@ -38,7 +42,8 @@ func (bmp *BMPFile) Filt(piece string) {
 				data1[i][j].r = 0
 			}
 		}
-	} else if piece == "negative" {
+
+	case "negative":
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
 
@@ -49,7 +54,8 @@ func (bmp *BMPFile) Filt(piece string) {
 				data1[i][j].b = 255 - data1[i][j].b
 			}
 		}
-	} else if piece == "pixelate" {
+
+	case "pixelate":
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
 		blockSize := 20
@@ -82,43 +88,42 @@ func (bmp *BMPFile) Filt(piece string) {
 				}
 			}
 		}
-	} else if piece == "blur" {
+
+	case "blur":
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
 
-		for i := 0; i < height; i++ {
-			for j := 0; j < width; j++ {
-				var rSum, gSum, bSum int
+		for i := -1; i < height-1; i++ {
+			for j := -1; j < width-1; j++ {
+				var rSum, gSum, bSum, count int
 
-				for bi := 0; bi <= 2; bi++ {
-					for bj := 0; bj <= 2; bj++ {
-						if i+bi >= height || j+bj >= width {
-							break
+				for bi := 1; bi <= 21; bi++ {
+					for bj := 1; bj <= 21; bj++ {
+						if i+bi < height && j+bj < width {
+							rSum += int(data1[i+bi][j+bj].r)
+							gSum += int(data1[i+bi][j+bj].g)
+							bSum += int(data1[i+bi][j+bj].b)
+							count++
 						}
-						
-						rSum += int(data1[i+bi][j+bj].r)
-						gSum += int(data1[i+bi][j+bj].g)
-						bSum += int(data1[i+bi][j+bj].b)
 					}
 				}
 
-				rCenterSum := rSum / 9
-				gCenterSum := gSum / 9
-				bCenterSum := bSum / 9
+				rCenterSum := rSum / count
+				gCenterSum := gSum / count
+				bCenterSum := bSum / count
 
-				for bi := 0; bi <= 2; bi++ {
-					for bj := 0; bj <= 2; bj++ {
-						if i+bi >= height || j+bj >= width {
-							break
-						}
-						data1[i+bi][j+bj].r = byte(rCenterSum)
-						data1[i+bi][j+bj].g = byte(gCenterSum)
-						data1[i+bi][j+bj].b = byte(bCenterSum)
-					}
+				if i+1 >= height || j+1 >= width {
+					continue
 				}
+
+				data1[i+1][j+1].r = byte(rCenterSum)
+				data1[i+1][j+1].g = byte(gCenterSum)
+				data1[i+1][j+1].b = byte(bCenterSum)
+
 			}
 		}
-	} else if piece == "grayscale" {
+
+	case "grayscale":
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
 
@@ -136,7 +141,8 @@ func (bmp *BMPFile) Filt(piece string) {
 				data1[i][j].r = grayscale
 			}
 		}
-	} else {
+
+	default:
 		fmt.Fprintln(os.Stderr, "Undefined filter")
 		os.Exit(1)
 	}
