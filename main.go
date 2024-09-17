@@ -19,6 +19,7 @@ func main() {
 				break
 			}
 		}
+
 		if piece == "--filter" {
 			dataPic := readFile("sample.bmp")
 			bmp, _ := bitmap.Decode(dataPic)
@@ -35,7 +36,10 @@ func main() {
 		bmp.HeaderInfo()
 
 		// Some manipulations
-		bmp.Crop()
+		if piece == "" {
+			bmp.Crop()
+
+		}
 
 		// Get array of bytes
 		data, _ = bitmap.Encode(bmp)
