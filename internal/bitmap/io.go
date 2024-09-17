@@ -15,8 +15,15 @@ func Decode(data []byte) (BMPFile, error) {
 		return bmp, err
 	}
 	if string(head.FileType[:]) != "BM" {
-		return bmp, errors.New("file type is not .bmp")
+		return bmp, errors.New("<source_file> type should be .bmp")
 	}
+	if head.CompressionMethod != 0 {
+		return bmp, errors.New("<source_file> should be uncompressed")
+	}
+	if head.BitsPerPixel != 24 {
+		return bmp, errors.New("<source_file>should be 24-bit color")
+	}
+
 	bmp.head = head
 
 	bmp.image = readImage(data[bmp.head.StartingAddress:], int(bmp.head.Width), int(bmp.head.Height), int(bmp.head.BitsPerPixel))
@@ -27,7 +34,7 @@ func Decode(data []byte) (BMPFile, error) {
 // Create new a new byte slice from a BMPFile struct
 func Encode(bmp BMPFile) ([]byte, error) {
 	head, err := bmp.convertHeaderToBytes()
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	body := bmp.converBodyToBytes()
@@ -91,7 +98,7 @@ func (bmp *BMPFile) convertHeaderToBytes() ([]byte, error) {
 
 	// Write the Header struct into the buffer using little-endian encoding
 	err := binary.Write(buf, binary.LittleEndian, bmp.head)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 

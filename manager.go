@@ -74,8 +74,8 @@ func manage(args []string) {
 				dst := args[len(args)-1]
 				src := args[len(args)-2]
 
-				if !strings.HasSuffix(dst, ".bmp") || !strings.HasSuffix(src, ".bmp") {
-					fmt.Println("<source_file> and <output_file> must be .bmp type")
+				if !strings.HasSuffix(dst, ".bmp") {
+					fmt.Println("Error: <output_file> must be .bmp type")
 					os.Exit(1)
 				}
 
@@ -94,7 +94,7 @@ func manage(args []string) {
 
 				// Create new bmp file
 				createFile(newData, dst)
-				fmt.Println("New file was successfully created!")
+				fmt.Printf("New file %v was successfully created!\n", dst)
 			}
 		}
 	}
@@ -115,6 +115,17 @@ func applyManager(bmp *bitmap.BMPFile, command string) {
 		switch value {
 		case "horizontal", "h", "horizontally", "hor":
 			bmp.MirrorHorizontal()
+		case "vertical", "v", "vertically", "ver":
+			bmp.MirrorVertical()
+		default:
+			fmt.Printf("wrong input %v. See 'apply --help'\n", command)
+			os.Exit(1)
+		}
+	case "--filter":
+		err := bmp.Filt(value)
+		if err != nil{
+			fmt.Printf("%v. See 'apply --help'\n", err)
+			os.Exit(1)
 		}
 	}
 }

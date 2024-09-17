@@ -1,15 +1,12 @@
 package bitmap
 
-import (
-	"fmt"
-	"os"
-)
+import "errors"
 
-func (bmp *BMPFile) Filt(piece string) {
+func (bmp *BMPFile) Filt(color string) error {
 	data1 := bmp.image
 
-	switch piece {
-		
+	switch color {
+
 	case "blue":
 		width := int(bmp.head.Width)
 		height := int(bmp.head.Height)
@@ -143,7 +140,7 @@ func (bmp *BMPFile) Filt(piece string) {
 		}
 
 	default:
-		fmt.Fprintln(os.Stderr, "Undefined filter")
-		os.Exit(1)
+		return errors.New("undefined filter")
 	}
+	return nil
 }
