@@ -5,148 +5,145 @@ import (
 	"os"
 )
 
-func Filt(data []byte, width int, BitsPerPixel int, readData []string, height int, pixel [][]Pixel) [][]Pixel {
-	if len(readData) <= 2 {
-		os.Exit(1)
-	}
-	piece := readData[2]
-	for i := 0; i < len(readData[2]); i++ {
-		if piece[i] == '=' {
-			piece = piece[i+1:]
-			break
-		}
-	}
+func (bmp *BMPFile) Filt(piece string) {
+	data1 := bmp.image
 
-	if piece == "blue" {
-		for row := 0; row < height; row++ {
-			for col := 0; col < width; col++ {
-				pixel[row][col].red = 0
-				pixel[row][col].green = 0
+	switch piece {
+
+	case "blue":
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
+
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				data1[i][j].g = 0
+				data1[i][j].r = 0
 			}
 		}
-		return pixel
-	} else if piece == "red" {
-		for row := 0; row < height; row++ {
-			for col := 0; col < width; col++ {
-				pixel[row][col].green = 0
-				pixel[row][col].blue = 0
+
+	case "red":
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
+
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				data1[i][j].g = 0
+				data1[i][j].b = 0
 			}
 		}
-		return pixel
-	} else if piece == "green" {
-		for row := 0; row < height; row++ {
-			for col := 0; col < width; col++ {
-				pixel[row][col].red = 0
-				pixel[row][col].blue = 0
+
+	case "green":
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
+
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				data1[i][j].b = 0
+				data1[i][j].r = 0
 			}
 		}
-		return pixel
-	} else if piece == "negative" {
-		for row := 0; row < height; row++ {
-			for col := 0; col < width; col++ {
-				pixel[row][col].red = 255 - pixel[row][col].red
-				pixel[row][col].green = 255 - pixel[row][col].green
-				pixel[row][col].blue = 255 - pixel[row][col].blue
+
+	case "negative":
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
+
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+				data1[i][j].g = 255 - data1[i][j].g
+				data1[i][j].r = 255 - data1[i][j].r
+				data1[i][j].b = 255 - data1[i][j].b
 			}
 		}
-		return pixel
-	} else if piece == "pixelate" {
+
+	case "pixelate":
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
 		blockSize := 20
-		for row := 0; row < height; row += blockSize {
-			for col := 0; col < width; col += blockSize {
-				var red, green, blue, count int
-				for y := 0; y < blockSize; y++ {
-					for x := 0; x < blockSize; x++ {
-						yPixel := row + y
-						xPixel := col + x
-						if yPixel > height || xPixel > width {
-							continue
-						}
-						red += int(pixel[yPixel][xPixel].red)
-						blue += int(pixel[yPixel][xPixel].green)
-						green += int(pixel[yPixel][xPixel].blue)
+
+		for y := 0; y < height; y += blockSize {
+			for x := 0; x < width; x += blockSize {
+				var RSum, GSum, BSum int
+				count := 0
+
+				for by := 0; by < blockSize; by++ {
+					for bx := 0; bx < blockSize; bx++ {
+						pixel := data1[y+by][x+bx]
+						RSum += int(pixel.r)
+						GSum += int(pixel.g)
+						BSum += int(pixel.b)
 						count++
 					}
 				}
-				for y := 0; y < blockSize; y++ {
-					for x := 0; x < blockSize; x++ {
-						yPixel := row + y
-						xPixel := col + x
-						if yPixel > height || xPixel > width {
-							continue
-						}
-						pixel[yPixel][xPixel].red = byte(red / count)
-						pixel[yPixel][xPixel].green = byte(green / count)
-						pixel[yPixel][xPixel].blue = byte(blue / count)
+
+				RAvg := byte(RSum / count)
+				GAvg := byte(GSum / count)
+				BAvg := byte(BSum / count)
+
+				for by := 0; by < blockSize; by++ {
+					for bx := 0; bx < blockSize; bx++ {
+						data1[y+by][x+bx].r = RAvg
+						data1[y+by][x+bx].g = GAvg
+						data1[y+by][x+bx].b = BAvg
 					}
 				}
 			}
 		}
-		return pixel
-	} else if piece == "blur" {
-		bit := BitsPerPixel / 8
-		rowSize := width * bit
-		halfKernel := 20
 
-		newData := make([]byte, len(data))
-		copy(newData, data)
+	case "blur":
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
 
-		for y := 0; y < height; y++ {
-			for x := 0; x < width; x++ {
+		for i := -1; i < height-1; i++ {
+			for j := -1; j < width-1; j++ {
 				var rSum, gSum, bSum, count int
 
-				for ky := 0; ky <= halfKernel; ky++ {
-					for kx := 0; kx <= halfKernel; kx++ {
-						ny := clamp(y+ky, 0, height-1)
-						nx := clamp(x+kx, 0, width-1)
-
-						i := (ny*rowSize + nx*3)
-
-						b := int(data[i])
-						g := int(data[i+1])
-						r := int(data[i+2])
-
-						rSum += r
-						gSum += g
-						bSum += b
-						count++
+				for bi := 1; bi <= 21; bi++ {
+					for bj := 1; bj <= 21; bj++ {
+						if i+bi < height && j+bj < width {
+							rSum += int(data1[i+bi][j+bj].r)
+							gSum += int(data1[i+bi][j+bj].g)
+							bSum += int(data1[i+bi][j+bj].b)
+							count++
+						}
 					}
 				}
 
-				rAvg := byte(rSum / count)
-				gAvg := byte(gSum / count)
-				bAvg := byte(bSum / count)
+				rCenterSum := rSum / count
+				gCenterSum := gSum / count
+				bCenterSum := bSum / count
 
-				i := (y*rowSize + x*3)
-				newData[i] = bAvg
-				newData[i+1] = gAvg
-				newData[i+2] = rAvg
-			}
-		}
-		for row := 0; row < height; row++ {
-			for col := 0; col < width; col++ {
-				var red, green, blue, count int
-
-				for y := 0; y <= halfKernel; y++ {
-					for x := 0; x <= halfKernel; x++ {
-					}
+				if i+1 >= height || j+1 >= width {
+					continue
 				}
+
+				data1[i+1][j+1].r = byte(rCenterSum)
+				data1[i+1][j+1].g = byte(gCenterSum)
+				data1[i+1][j+1].b = byte(bCenterSum)
+
 			}
 		}
-		return pixel
-	} else {
+
+	case "grayscale":
+		width := int(bmp.head.Width)
+		height := int(bmp.head.Height)
+
+		for i := 0; i < height; i++ {
+			for j := 0; j < width; j++ {
+
+				R := float64(data1[i][j].r)
+				G := float64(data1[i][j].g)
+				B := float64(data1[i][j].b)
+
+				grayscale := byte(R*0.299 + G*0.587 + B*0.114)
+
+				data1[i][j].g = grayscale
+				data1[i][j].b = grayscale
+				data1[i][j].r = grayscale
+			}
+		}
+
+	default:
 		fmt.Fprintln(os.Stderr, "Undefined filter")
 		os.Exit(1)
 	}
-	return [][]Pixel{}
-}
-
-func clamp(value, min, max int) int {
-	if value < min {
-		return min
-	}
-	if value > max {
-		return max
-	}
-	return value
 }

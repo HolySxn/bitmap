@@ -1,97 +1,23 @@
 package bitmap
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 )
 
-type Header struct {
-	FileType          [2]byte
-	FileSize          uint32
-	Reserved1         uint16
-	Reserved2         uint16
-	StartingAddress   uint32
-	HeaderSize        uint32
-	Width             uint32
-	Height            uint32
-	ColorPlanes       uint16
-	BitsPerPixel      uint16
-	CompressionMethod uint32
-	ImageSize         uint32
-	XPixelsPerMeter   int32
-	YPixelsPerMeter   int32
-	TotalColors       uint32
-	ImportantColors   uint32
-}
-
-type Pixel struct {
-	red   byte
-	green byte
-	blue  byte
-}
-
-func Build(data []byte, width int) [][]Pixel {
-	pixel := [][]Pixel{}
-	row := []Pixel{}
-	y := 0
-	for i := 0; i < len(data); i += 3 {
-		if y > width {
-			pixel = append(pixel, row)
-			row = []Pixel{}
-			y = 0
-		}
-		row = append(row, Pixel{data[i], data[i+1], data[i+2]})
-	}
-	return pixel
-}
-
-func (head *Header) ReadHeader(data []byte) {
-	buf := bytes.NewReader(data)
-	err := binary.Read(buf, binary.LittleEndian, head)
-	errNil(err)
-}
-
-func (head *Header) HeaderInfo() {
-	// Check if it's a BMP file by looking at the signature ("BM")
+func (bmp *BMPFile) HeaderInfo() {
 	fmt.Println("BMP Header:")
-	if string(head.FileType[:]) != "BM" {
-		fmt.Println("Not a BMP file")
-		return
-	}
 
-	// Extract file type
-	fmt.Println("- FileType", string(head.FileType[:]))
-
-	// Extract total file size (optional, just as an example)
-	fmt.Println("- FileSizeInBytes", head.FileSize)
-
-	// Extract the size of the header
-	fmt.Println("- HeaderSize", head.StartingAddress)
+	// Display basic header information
+	fmt.Printf("- File Type: %s\n", string(bmp.head.FileType[:]))
+	fmt.Printf("- File Size: %d bytes\n", bmp.head.FileSize)
+	fmt.Printf("- Starting Address: %d\n", bmp.head.StartingAddress)
 
 	fmt.Println("DIB Header:")
 
-	// Extract size of the DIB header
-	fmt.Println("- DIBHeaderSize", head.HeaderSize)
-
-	// Extract image width
-	fmt.Println("- WidthInPixels", head.Width)
-
-	// Extract image height
-	fmt.Println("- HeightInPixels", head.Height)
-
-	// Extract pixel size in bits
-	fmt.Println("- PixelSizeInBits", head.BitsPerPixel)
-
-	// Extract image size in bytes
-	fmt.Println("- ImageSizeInBytes", head.FileSize-head.StartingAddress)
-}
-
-func (head *Header) ToBytes() []byte {
-	buf := new(bytes.Buffer)
-
-	err := binary.Write(buf, binary.LittleEndian, head)
-	errNil(err)
-
-	return buf.Bytes()
+	// Display DIB header information
+	fmt.Printf("- DIB Header Size: %d bytes\n", bmp.head.HeaderSize)
+	fmt.Printf("- Image Width: %d pixels\n", bmp.head.Width)
+	fmt.Printf("- Image Height: %d pixels\n", bmp.head.Height)
+	fmt.Printf("- Bits Per Pixel: %d\n", bmp.head.BitsPerPixel)
+	fmt.Printf("- Image Data Size: %d bytes\n", bmp.head.FileSize-bmp.head.StartingAddress)
 }

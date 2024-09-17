@@ -3,48 +3,46 @@ package main
 import (
 	"bitmap/internal/bitmap"
 	"fmt"
-	"io"
 	"os"
 )
 
 func main() {
-	var readData []string
-	readData = append(readData, os.Args...)
-	if readData[1] == "apply" {
-		// Open the BMP file
-		file, err := os.Open("grid.bmp")
-		errNil(err)
-		defer file.Close()
+	var color string
+	readData := os.Args[1:]
+	if readData[0] == "apply" {
+		piece := readData[1]
+		for i := 0; i < len(readData[1]); i++ {
+			if piece[i] == '=' {
+				color = piece[i+1:]
+				piece = piece[:i]
+				break
+			}
+		}
+		if piece == "--filter" {
+			dataPic := readFile("sample.bmp")
+			bmp, _ := bitmap.Decode(dataPic)
+			bmp.Filt(color)
+			dataPic, _ = bitmap.Encode(bmp)
+			createFile(dataPic)
+			os.Exit(0)
+		}
+		// Read file
+		data := readFile("sample.bmp")
 
-		// Read the entire file into memory
-		data, err := io.ReadAll(file)
-		errNil(err)
+		// Get BMPFile struct
+		bmp, _ := bitmap.Decode(data)
+		bmp.HeaderInfo()
 
-		// Read and output header
-		var header bitmap.Header
-		header.ReadHeader(data)
-		header.HeaderInfo()
+		// Some manipulations
+		bmp.Crop()
 
-		// When we change data in pixelMap it also changed in the originall array "data"
-		pixelMap := bitmap.PixelMap(data[header.StartingAddress:], int(header.Width), int(header.Height), int(header.BitsPerPixel))
-		fmt.Println(data[header.StartingAddress:])
-		fmt.Println(pixelMap)
-		bitmap.MirrorHorizontal(pixelMap, int(header.Width), int(header.Height), int(header.BitsPerPixel))
+		// Get array of bytes
+		data, _ = bitmap.Encode(bmp)
 
-		fmt.Println(data[header.StartingAddress:])
-		fmt.Println(pixelMap)
-
-		// Crete new BMP file
-		// bitmap.CreateBMP(&header, data[header.StartingAddress:], "output.bmp")
-		// bitmap.CreateBMP(&header, horiz, "outputFilter.bmp")
+		// Create new bmp file
+		createFile(data)
 	} else {
 		fmt.Fprintln(os.Stderr, "Error apply")
 		os.Exit(1)
-	}
-}
-
-func errNil(err error) {
-	if err != nil {
-		panic(err)
 	}
 }
