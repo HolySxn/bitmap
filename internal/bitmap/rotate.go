@@ -44,7 +44,7 @@ func (bmp *BMPFile) BottomUp() {
 	data := bmp.image
 	height := int(bmp.head.Height)
 	width := int(bmp.head.Width)
-	newData := make([][]Pixel, height)
+	newData := [][]Pixel{}
 
 	for i := height - 1; i >= 0; i-- {
 		row := []Pixel{}

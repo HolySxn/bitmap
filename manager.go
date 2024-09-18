@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"bitmap/internal/bitmap"
@@ -28,7 +29,7 @@ Description:
 The options are:
 	-h, --help      prints program usage information`
 
-var applyHeader = `Usage:
+var applyHelp = `Usage:
 	bitmap apply [options] <source_file> <output_file>
 
 File options:
@@ -36,7 +37,27 @@ File options:
 
 The options are:
 	-h, --help      prints program usage information
-	...`
+
+	--mirror=:
+	 	[horizontal], [h], [horizontally], [hor] 	mirror the image horizontally
+		[vertical], [v], [vertically], [ver] 		mirror the image vertically
+	
+	--filter=:
+		[blue] 		apply a filter that retains only the blue channel
+		[red] 		apply a filter that retains only the red channel
+		[green] 	apply a filter that retains only the green channel
+		[grayscale] 	convert the image to grayscale
+		[negative]	apply a negative filter
+		[pixelate] 	apply a pixelation effect. Option pixelates the image with a block size of 20 pixels by default
+		[blur] 		apply a blur effect
+		
+	--rotate=:
+		[right] 					rotate the image right
+		[left] 						rotate the image left
+		[90], [180], [270], [-90], [-180], [-270] 	rotate the image on a certain number of degree
+	
+	--crop=OffsetX-OffsetY-Width-Height	crop image. Width and height are optional`
+
 
 func manage(args []string) {
 	if len(args) == 0 {
@@ -66,9 +87,10 @@ func manage(args []string) {
 				bmp.HeaderInfo()
 			}
 		case "apply":
-			if len(args[1:]) < 3 {
-				fmt.Println("error: not enough arguments")
-				fmt.Println(applyHeader)
+			if len(args[1:]) == 1 && (args[1] == "--help" || args[1] == "-h"){
+				fmt.Println(applyHelp)
+			}else if len(args[1:]) < 3 {
+				fmt.Println("error: not enough arguments. See 'apply --help'")
 				os.Exit(1)
 			} else {
 				dst := args[len(args)-1]
@@ -96,6 +118,9 @@ func manage(args []string) {
 				createFile(newData, dst)
 				fmt.Printf("New file %v was successfully created!\n", dst)
 			}
+		default:
+			fmt.Println("wrong input. See '--help'")
+			os.Exit(1)
 		}
 	}
 }
@@ -103,7 +128,7 @@ func manage(args []string) {
 func applyManager(bmp *bitmap.BMPFile, command string) {
 	com_val := strings.Split(command, "=")
 	if len(com_val) != 2 {
-		fmt.Println("wrong input. See 'apply --help'")
+		fmt.Printf("wrong input %v. See 'apply --help'\n", command)
 		os.Exit(1)
 	}
 
@@ -123,10 +148,63 @@ func applyManager(bmp *bitmap.BMPFile, command string) {
 		}
 	case "--filter":
 		err := bmp.Filt(value)
-		if err != nil{
+		if err != nil {
 			fmt.Printf("%v. See 'apply --help'\n", err)
 			os.Exit(1)
 		}
+	case "--rotate":
+		switch value {
+		case "right", "90", "-270":
+			bmp.RotateRight()
+		case "left", "-90", "270":
+			bmp.RotateLeft()
+		case "180", "-180":
+			bmp.BottomUp()
+		default:
+			fmt.Printf("wrong input %v. See 'apply --help'\n", command)
+			os.Exit(1)
+		}
+	case "--crop":
+		xywd := strings.Split(value, "-")
+		if len(xywd) != 2 && len(xywd) != 4 {
+			fmt.Printf("wrong input %v. See 'apply --help'\n", command)
+			os.Exit(1)
+		}
+
+		for _, v := range xywd {
+			if v == "" {
+				errApply(command)
+			}
+		}
+
+		offsetX, offsetY, width, height := -1, -1, -1, -1
+		var err error
+		offsetX, err = strconv.Atoi(xywd[0])
+		if err != nil {
+			errApply(command)
+		}
+		offsetY, err = strconv.Atoi(xywd[1])
+		if err != nil {
+			errApply(command)
+		}
+
+		if len(xywd) == 4 {
+			width, err = strconv.Atoi(xywd[2])
+			if err != nil {
+				errApply(command)
+			}
+			height, err = strconv.Atoi(xywd[3])
+			if err != nil {
+				errApply(command)
+			}
+		}
+
+		err = bmp.Crop(offsetX, offsetY, width, height)
+		if err != nil{
+			errApply(command)
+		}
+	default:
+		errApply(command)
 	}
 }
 
@@ -157,4 +235,9 @@ func errNil(err error) {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
+}
+
+func errApply(command string) {
+	fmt.Printf("wrong input %v. See 'apply --help'\n", command)
+	os.Exit(1)
 }
