@@ -57,6 +57,10 @@ func (bmp *BMPFile) Filt(color string) error {
 		height := int(bmp.head.Height)
 		blockSize := 20
 
+		if height < 20 || width < 20 {
+			return errors.New("ERROR: Size should be at least 20x20")
+		}
+
 		for y := 0; y < height; y += blockSize {
 			for x := 0; x < width; x += blockSize {
 				var RSum, GSum, BSum int

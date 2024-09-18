@@ -96,7 +96,7 @@ func manage(args []string) {
 				src := args[len(args)-2]
 
 				if !strings.HasSuffix(dst, ".bmp") {
-					fmt.Println("Error: <output_file> must be .bmp type")
+					fmt.Println("Error: <output_file> must be .bmp type. See 'apply --help'")
 					os.Exit(1)
 				}
 
