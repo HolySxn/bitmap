@@ -58,7 +58,6 @@ The options are:
 	
 	--crop=OffsetX-OffsetY-Width-Height	crop image. Width and height are optional`
 
-
 func manage(args []string) {
 	if len(args) == 0 {
 		fmt.Println("no command provided")
@@ -87,9 +86,9 @@ func manage(args []string) {
 				bmp.HeaderInfo()
 			}
 		case "apply":
-			if len(args[1:]) == 1 && (args[1] == "--help" || args[1] == "-h"){
+			if len(args[1:]) == 1 && (args[1] == "--help" || args[1] == "-h") {
 				fmt.Println(applyHelp)
-			}else if len(args[1:]) < 3 {
+			} else if len(args[1:]) < 3 {
 				fmt.Println("error: not enough arguments. See 'apply --help'")
 				os.Exit(1)
 			} else {
@@ -200,7 +199,7 @@ func applyManager(bmp *bitmap.BMPFile, command string) {
 		}
 
 		err = bmp.Crop(offsetX, offsetY, width, height)
-		if err != nil{
+		if err != nil {
 			errApply(command)
 		}
 	default:
